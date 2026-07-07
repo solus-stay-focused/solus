@@ -2033,6 +2033,76 @@
     overflow:hidden;
   }
 
+  /* ---------- COMMUNITY WALL ---------- */
+  .community-wall{
+    background:var(--paper);
+    padding:70px 48px 90px;
+  }
+  .community-wall-inner{
+    max-width:1280px;
+    margin:0 auto;
+  }
+  .community-wall-inner h3{
+    font-family:'Archivo',sans-serif;
+    font-size:26px;
+    font-weight:800;
+    color:var(--ink);
+    margin-bottom:28px;
+    letter-spacing:-0.3px;
+  }
+  .community-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:22px;
+  }
+  @media (max-width:980px){
+    .community-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+  @media (max-width:560px){
+    .community-grid{ grid-template-columns:1fr; }
+  }
+  .community-empty{
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+    padding:50px 0;
+  }
+  .cp-card{
+    background:#fff;
+    border:1px solid var(--line-dark);
+    border-radius:10px;
+    overflow:hidden;
+    /* Always-white card: keep text colors fixed dark regardless of theme */
+    --ink:#0c0c0e;
+    --muted:#8a8a93;
+    --line-dark:rgba(0,0,0,0.08);
+  }
+  .cp-card .cp-image{aspect-ratio:1/1;}
+  .cp-card .cp-image img,
+  .cp-card .cp-image video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .cp-card .cp-header{padding:12px 14px 6px;}
+  .cp-card .cp-caption{padding:6px 14px 16px;}
+  .cp-like-btn{
+    background:none;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:var(--muted);
+    font-size:12.5px;
+    font-weight:700;
+    padding:0;
+  }
+  .cp-like-btn svg{width:19px;height:19px;stroke:var(--ink);fill:none;stroke-width:1.8;transition:fill .15s ease, stroke .15s ease;}
+  .cp-like-btn.liked svg{fill:#e0455f;stroke:#e0455f;}
+  .cp-like-btn.liked{color:#e0455f;}
+
   /* ---------- FOOTER ---------- */
   footer{
     background:var(--black);
@@ -2655,14 +2725,25 @@
   </div>
 </section>
 
-<!-- ================= LIFESTYLE ================= -->
+<!-- ================= LIFESTYLE / COMMUNITY ================= -->
 <section class="lifestyle" id="lifestyle">
   <div class="lifestyle-text">
-    <h2>Any Ongoing Campaigns?</h2>
-    <button class="btn btn-primary" id="checkCampaignsBtn" style="align-self:flex-start;">CHECK NOW</button>
+    <div class="eyebrow">#SOLUSMOMENTS</div>
+    <h2>Share Your Solus Moments</h2>
+    <p>Snap a photo of your Solus tumbler out in the wild — on your desk, on a hike, wherever — and share it with the community. Your post could be featured right here.</p>
+    <button class="btn btn-primary" id="postMomentBtn" style="align-self:flex-start;">SHARE YOUR MOMENT</button>
   </div>
   <div class="lifestyle-img">
     <img src="desk.jpg" alt="Solus on a desk" style="width:100%; height:100%; object-fit:cover;">
+  </div>
+</section>
+
+<!-- ================= COMMUNITY WALL ================= -->
+<section class="community-wall" id="communityWall">
+  <div class="community-wall-inner">
+    <h3>From The Community</h3>
+    <div class="community-grid" id="communityGrid"></div>
+    <div class="community-empty" id="communityEmpty" style="display:none;">No moments shared yet — be the first to post!</div>
   </div>
 </section>
 
@@ -2885,11 +2966,26 @@
   </div>
 </div>
 
-<div class="campaign-modal" id="campaignModal">
-  <div class="campaign-modal-inner cm-simple">
-    <button class="campaign-close" id="closeCampaign">✕</button>
-    <h3>Ongoing Campaigns</h3>
-    <p>There are no active campaigns right now — check back soon for exclusive deals and limited-time offers!</p>
+<div class="campaign-modal" id="communityModal">
+  <div class="campaign-modal-inner" style="max-width:420px; padding:28px 26px 26px;">
+    <button class="campaign-close" id="closeCommunityModal">✕</button>
+    <h3 style="font-family:'Archivo',sans-serif; font-size:22px; font-weight:800; margin-bottom:6px;">Share Your Moment</h3>
+    <p style="color:var(--muted); font-size:13.5px; line-height:1.6; margin-bottom:20px;">Post a photo of your Solus tumbler and inspire the community.</p>
+
+    <form id="communityPostForm">
+      <div id="communityPreviewWrap" style="display:none; margin-bottom:14px;">
+        <img id="communityPreviewImg" style="width:100%; border-radius:8px; max-height:220px; object-fit:cover; display:block;" alt="">
+      </div>
+      <label for="communityFileInput" style="display:flex; align-items:center; justify-content:center; gap:8px; border:1.5px dashed var(--line-dark); border-radius:8px; padding:16px; cursor:pointer; font-size:13px; font-weight:700; color:var(--muted); margin-bottom:14px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        <span id="communityFileLabel">Choose a photo</span>
+      </label>
+      <input type="file" id="communityFileInput" accept="image/*" style="display:none;" required>
+      <input type="text" id="communityName" placeholder="Your name" required style="width:100%; padding:11px 13px; border:1px solid var(--line-dark); border-radius:6px; font-size:13.5px; margin-bottom:10px; font-family:inherit;">
+      <textarea id="communityCaption" placeholder="Say something about your moment..." required style="width:100%; padding:11px 13px; border:1px solid var(--line-dark); border-radius:6px; font-size:13.5px; min-height:70px; resize:vertical; margin-bottom:16px; font-family:inherit;"></textarea>
+      <button type="submit" class="btn btn-primary" style="width:100%;">POST</button>
+      <div id="communityFormMsg" style="display:none; text-align:center; color:#3a8c5c; font-size:13px; font-weight:700; margin-top:12px;">Thanks for sharing! 🎉</div>
+    </form>
   </div>
 </div>
 
@@ -4117,15 +4213,170 @@ document.querySelectorAll('.social-btn').forEach(btn => {
     });
   })();
 
-  // ---- Campaign check modal ----
-  const campaignModal = document.getElementById('campaignModal');
-  const checkCampaignsBtn = document.getElementById('checkCampaignsBtn');
-  const closeCampaign = document.getElementById('closeCampaign');
-  checkCampaignsBtn.addEventListener('click', ()=> campaignModal.classList.add('show'));
-  closeCampaign.addEventListener('click', ()=> campaignModal.classList.remove('show'));
-  campaignModal.addEventListener('click', (e)=>{
-    if(e.target === campaignModal) campaignModal.classList.remove('show');
-  });
+  // ---- Community Wall: "Share Your Moment" ----
+  (function(){
+    const COMMUNITY_KEY = 'solus_community_v1';
+    const communityModal = document.getElementById('communityModal');
+    const postMomentBtn = document.getElementById('postMomentBtn');
+    const closeCommunityModal = document.getElementById('closeCommunityModal');
+    const communityGrid = document.getElementById('communityGrid');
+    const communityEmpty = document.getElementById('communityEmpty');
+    const communityPostForm = document.getElementById('communityPostForm');
+    const communityFileInput = document.getElementById('communityFileInput');
+    const communityFileLabel = document.getElementById('communityFileLabel');
+    const communityPreviewWrap = document.getElementById('communityPreviewWrap');
+    const communityPreviewImg = document.getElementById('communityPreviewImg');
+    const communityName = document.getElementById('communityName');
+    const communityCaption = document.getElementById('communityCaption');
+    const communityFormMsg = document.getElementById('communityFormMsg');
+
+    if(!communityModal || !postMomentBtn) return;
+
+    let posts = [];
+    let pendingImageData = null;
+
+    function loadPosts(){
+      try{
+        const raw = localStorage.getItem(COMMUNITY_KEY);
+        posts = raw ? JSON.parse(raw) : [];
+      }catch(e){ posts = []; }
+    }
+
+    function savePosts(){
+      try{ localStorage.setItem(COMMUNITY_KEY, JSON.stringify(posts)); }
+      catch(e){ alert('Your photo could not be saved — it may be too large. Try a smaller image.'); }
+    }
+
+    function timeAgo(iso){
+      const diffMs = Date.now() - new Date(iso).getTime();
+      const mins = Math.floor(diffMs / 60000);
+      if(mins < 1) return 'Just now';
+      if(mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if(hrs < 24) return `${hrs}h ago`;
+      const days = Math.floor(hrs / 24);
+      return `${days}d ago`;
+    }
+
+    function escapeHtml(str){
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function renderPosts(){
+      if(posts.length === 0){
+        communityGrid.innerHTML = '';
+        communityEmpty.style.display = 'block';
+        return;
+      }
+      communityEmpty.style.display = 'none';
+      communityGrid.innerHTML = posts.map((post, idx) => `
+        <div class="cp-card">
+          <div class="cp-header">
+            <div class="cp-avatar" style="display:flex;align-items:center;justify-content:center;background:var(--purple);color:#fff;font-weight:700;font-size:14px;">${escapeHtml((post.name || '?').charAt(0).toUpperCase())}</div>
+            <div class="cp-header-text">
+              <span class="cp-username">${escapeHtml(post.name)}</span>
+              <span class="cp-time">${timeAgo(post.date)}</span>
+            </div>
+          </div>
+          <div class="cp-image"><img src="${post.image}" alt="Community post"></div>
+          <div class="cp-actions">
+            <button type="button" class="cp-like-btn ${post.liked ? 'liked' : ''}" data-idx="${idx}">
+              <svg viewBox="0 0 24 24"><path d="M20.8 4.6c-1.9-1.6-4.7-1.4-6.4.4L12 7.5l-2.4-2.5c-1.7-1.8-4.5-2-6.4-.4-2.1 1.8-2.2 5-.3 7l9 9.4 9-9.4c1.9-2 1.8-5.2-.1-7z"/></svg>
+              <span>${post.likes || 0}</span>
+            </button>
+          </div>
+          <div class="cp-caption"><span class="cp-username">${escapeHtml(post.name)}</span>${escapeHtml(post.caption)}</div>
+        </div>
+      `).join('');
+
+      communityGrid.querySelectorAll('.cp-like-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.idx);
+          const post = posts[idx];
+          post.liked = !post.liked;
+          post.likes = (post.likes || 0) + (post.liked ? 1 : -1);
+          savePosts();
+          renderPosts();
+        });
+      });
+    }
+
+    function resetForm(){
+      communityPostForm.reset();
+      communityFileLabel.textContent = 'Choose a photo';
+      communityPreviewWrap.style.display = 'none';
+      communityPreviewImg.src = '';
+      pendingImageData = null;
+    }
+
+    postMomentBtn.addEventListener('click', () => {
+      resetForm();
+      communityFormMsg.style.display = 'none';
+      communityModal.classList.add('show');
+    });
+    closeCommunityModal.addEventListener('click', () => communityModal.classList.remove('show'));
+    communityModal.addEventListener('click', (e) => {
+      if(e.target === communityModal) communityModal.classList.remove('show');
+    });
+
+    communityFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      if(!file.type.startsWith('image/')){
+        alert('Please choose an image file.');
+        return;
+      }
+      communityFileLabel.textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          // Downscale so it stores cheaply in localStorage
+          const maxDim = 900;
+          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          pendingImageData = canvas.toDataURL('image/jpeg', 0.82);
+          communityPreviewImg.src = pendingImageData;
+          communityPreviewWrap.style.display = 'block';
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    communityPostForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if(!pendingImageData){
+        alert('Please choose a photo to share.');
+        return;
+      }
+      posts.unshift({
+        name: communityName.value.trim() || 'Anonymous',
+        caption: communityCaption.value.trim(),
+        image: pendingImageData,
+        date: new Date().toISOString(),
+        likes: 0,
+        liked: false
+      });
+      savePosts();
+      renderPosts();
+
+      communityFormMsg.style.display = 'block';
+      setTimeout(() => {
+        communityModal.classList.remove('show');
+      }, 900);
+    });
+
+    loadPosts();
+    renderPosts();
+  })();
 
   // ---- Newsletter form ----
   // Paste the Web App URL you get after deploying the Google Apps Script (see instructions).
