@@ -742,7 +742,6 @@
   /* ---------- HERO ---------- */
   .hero{
     position:relative;
-    z-index:2;
     overflow:hidden;
   }
   .hero-bg{
@@ -986,8 +985,6 @@
   .features{
     background:var(--paper);
     padding:64px 48px;
-    position:relative;
-    z-index:2;
   }
   .features-grid{
     max-width:1280px;
@@ -1029,7 +1026,6 @@
   background:#fff;
   padding:60px 48px 100px;
   position:relative;
-  z-index:2;
   /* This section's background is always white by design, so its text/button
      colors must stay fixed dark values instead of following the day/evening/
      night theme variables (which flip to light colors and would make text
@@ -1085,6 +1081,8 @@
     transition:box-shadow .2s ease, transform .2s ease;
     display:flex;
     flex-direction:column;
+    position:relative;
+    z-index:2;
   }
   .product-card:hover{
     box-shadow:0 14px 30px rgba(0,0,0,0.08);
@@ -1961,7 +1959,6 @@
   /* ---------- FULL BLEED BANNER ---------- */
   .full-banner{
     position:relative;
-    z-index:2;
     width:100%;
     aspect-ratio:2/1;
     background-color:var(--black);
@@ -2005,8 +2002,6 @@
     background:var(--black);
     display:grid;
     grid-template-columns:1fr 1fr;
-    position:relative;
-    z-index:2;
   }
   .lifestyle-text{
     padding:90px 64px;
@@ -2043,8 +2038,6 @@
     background:var(--black);
     color:#fff;
     padding:64px 48px 28px;
-    position:relative;
-    z-index:2;
   }
   .footer-grid{
     max-width:1280px;
