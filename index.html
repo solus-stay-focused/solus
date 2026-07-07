@@ -4213,170 +4213,6 @@ document.querySelectorAll('.social-btn').forEach(btn => {
     });
   })();
 
-  // ---- Community Wall: "Share Your Moment" ----
-  (function(){
-    const COMMUNITY_KEY = 'solus_community_v1';
-    const communityModal = document.getElementById('communityModal');
-    const postMomentBtn = document.getElementById('postMomentBtn');
-    const closeCommunityModal = document.getElementById('closeCommunityModal');
-    const communityGrid = document.getElementById('communityGrid');
-    const communityEmpty = document.getElementById('communityEmpty');
-    const communityPostForm = document.getElementById('communityPostForm');
-    const communityFileInput = document.getElementById('communityFileInput');
-    const communityFileLabel = document.getElementById('communityFileLabel');
-    const communityPreviewWrap = document.getElementById('communityPreviewWrap');
-    const communityPreviewImg = document.getElementById('communityPreviewImg');
-    const communityName = document.getElementById('communityName');
-    const communityCaption = document.getElementById('communityCaption');
-    const communityFormMsg = document.getElementById('communityFormMsg');
-
-    if(!communityModal || !postMomentBtn) return;
-
-    let posts = [];
-    let pendingImageData = null;
-
-    function loadPosts(){
-      try{
-        const raw = localStorage.getItem(COMMUNITY_KEY);
-        posts = raw ? JSON.parse(raw) : [];
-      }catch(e){ posts = []; }
-    }
-
-    function savePosts(){
-      try{ localStorage.setItem(COMMUNITY_KEY, JSON.stringify(posts)); }
-      catch(e){ alert('Your photo could not be saved — it may be too large. Try a smaller image.'); }
-    }
-
-    function timeAgo(iso){
-      const diffMs = Date.now() - new Date(iso).getTime();
-      const mins = Math.floor(diffMs / 60000);
-      if(mins < 1) return 'Just now';
-      if(mins < 60) return `${mins}m ago`;
-      const hrs = Math.floor(mins / 60);
-      if(hrs < 24) return `${hrs}h ago`;
-      const days = Math.floor(hrs / 24);
-      return `${days}d ago`;
-    }
-
-    function escapeHtml(str){
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
-
-    function renderPosts(){
-      if(posts.length === 0){
-        communityGrid.innerHTML = '';
-        communityEmpty.style.display = 'block';
-        return;
-      }
-      communityEmpty.style.display = 'none';
-      communityGrid.innerHTML = posts.map((post, idx) => `
-        <div class="cp-card">
-          <div class="cp-header">
-            <div class="cp-avatar" style="display:flex;align-items:center;justify-content:center;background:var(--purple);color:#fff;font-weight:700;font-size:14px;">${escapeHtml((post.name || '?').charAt(0).toUpperCase())}</div>
-            <div class="cp-header-text">
-              <span class="cp-username">${escapeHtml(post.name)}</span>
-              <span class="cp-time">${timeAgo(post.date)}</span>
-            </div>
-          </div>
-          <div class="cp-image"><img src="${post.image}" alt="Community post"></div>
-          <div class="cp-actions">
-            <button type="button" class="cp-like-btn ${post.liked ? 'liked' : ''}" data-idx="${idx}">
-              <svg viewBox="0 0 24 24"><path d="M20.8 4.6c-1.9-1.6-4.7-1.4-6.4.4L12 7.5l-2.4-2.5c-1.7-1.8-4.5-2-6.4-.4-2.1 1.8-2.2 5-.3 7l9 9.4 9-9.4c1.9-2 1.8-5.2-.1-7z"/></svg>
-              <span>${post.likes || 0}</span>
-            </button>
-          </div>
-          <div class="cp-caption"><span class="cp-username">${escapeHtml(post.name)}</span>${escapeHtml(post.caption)}</div>
-        </div>
-      `).join('');
-
-      communityGrid.querySelectorAll('.cp-like-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = Number(btn.dataset.idx);
-          const post = posts[idx];
-          post.liked = !post.liked;
-          post.likes = (post.likes || 0) + (post.liked ? 1 : -1);
-          savePosts();
-          renderPosts();
-        });
-      });
-    }
-
-    function resetForm(){
-      communityPostForm.reset();
-      communityFileLabel.textContent = 'Choose a photo';
-      communityPreviewWrap.style.display = 'none';
-      communityPreviewImg.src = '';
-      pendingImageData = null;
-    }
-
-    postMomentBtn.addEventListener('click', () => {
-      resetForm();
-      communityFormMsg.style.display = 'none';
-      communityModal.classList.add('show');
-    });
-    closeCommunityModal.addEventListener('click', () => communityModal.classList.remove('show'));
-    communityModal.addEventListener('click', (e) => {
-      if(e.target === communityModal) communityModal.classList.remove('show');
-    });
-
-    communityFileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if(!file) return;
-      if(!file.type.startsWith('image/')){
-        alert('Please choose an image file.');
-        return;
-      }
-      communityFileLabel.textContent = file.name;
-
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const img = new Image();
-        img.onload = () => {
-          // Downscale so it stores cheaply in localStorage
-          const maxDim = 900;
-          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width * scale;
-          canvas.height = img.height * scale;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          pendingImageData = canvas.toDataURL('image/jpeg', 0.82);
-          communityPreviewImg.src = pendingImageData;
-          communityPreviewWrap.style.display = 'block';
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-
-    communityPostForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if(!pendingImageData){
-        alert('Please choose a photo to share.');
-        return;
-      }
-      posts.unshift({
-        name: communityName.value.trim() || 'Anonymous',
-        caption: communityCaption.value.trim(),
-        image: pendingImageData,
-        date: new Date().toISOString(),
-        likes: 0,
-        liked: false
-      });
-      savePosts();
-      renderPosts();
-
-      communityFormMsg.style.display = 'block';
-      setTimeout(() => {
-        communityModal.classList.remove('show');
-      }, 900);
-    });
-
-    loadPosts();
-    renderPosts();
-  })();
 
   // ---- Newsletter form ----
   // Paste the Web App URL you get after deploying the Google Apps Script (see instructions).
@@ -4969,6 +4805,279 @@ searchClose.addEventListener('click', () => {
     reader.readAsDataURL(file);
     avatarFileInput.value = '';
   });
+
+  // ---- Community Wall: "Share Your Moment" (shared across everyone, stored in Firestore) ----
+  (function(){
+    const communityModal = document.getElementById('communityModal');
+    const postMomentBtn = document.getElementById('postMomentBtn');
+    const closeCommunityModal = document.getElementById('closeCommunityModal');
+    const communityGrid = document.getElementById('communityGrid');
+    const communityEmpty = document.getElementById('communityEmpty');
+    const communityPostForm = document.getElementById('communityPostForm');
+    const communityFileInput = document.getElementById('communityFileInput');
+    const communityFileLabel = document.getElementById('communityFileLabel');
+    const communityPreviewWrap = document.getElementById('communityPreviewWrap');
+    const communityPreviewImg = document.getElementById('communityPreviewImg');
+    const communityName = document.getElementById('communityName');
+    const communityCaption = document.getElementById('communityCaption');
+    const communityFormMsg = document.getElementById('communityFormMsg');
+
+    if(!communityModal || !postMomentBtn) return;
+
+    const postsCol = db.collection('communityPosts');
+    let posts = [];
+    let pendingImageData = null;
+
+    // Every visitor — logged in or not — needs a stable identity so we know
+    // whose like/comment/repost is whose, and so the same person can't like
+    // a post twice. Logged-in users use their Firebase uid; guests get a
+    // random id saved in this browser only.
+    function getIdentity(){
+      const user = auth.currentUser;
+      if(user){
+        return { id: user.uid, name: user.displayName || (user.email ? user.email.split('@')[0] : 'User') };
+      }
+      let anonId = localStorage.getItem('solus_anon_id');
+      if(!anonId){
+        anonId = 'guest-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem('solus_anon_id', anonId);
+      }
+      return { id: anonId, name: null };
+    }
+
+    function timeAgo(date){
+      if(!date) return 'Just now';
+      const diffMs = Date.now() - date.getTime();
+      const mins = Math.floor(diffMs / 60000);
+      if(mins < 1) return 'Just now';
+      if(mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if(hrs < 24) return `${hrs}h ago`;
+      const days = Math.floor(hrs / 24);
+      return `${days}d ago`;
+    }
+
+    function escapeHtml(str){
+      const div = document.createElement('div');
+      div.textContent = str == null ? '' : str;
+      return div.innerHTML;
+    }
+
+    function renderPosts(){
+      if(posts.length === 0){
+        communityGrid.innerHTML = '';
+        communityEmpty.style.display = 'block';
+        return;
+      }
+      communityEmpty.style.display = 'none';
+      const myId = getIdentity().id;
+
+      communityGrid.innerHTML = posts.map((post) => {
+        const likes = post.likes || [];
+        const reposts = post.reposts || [];
+        const comments = post.comments || [];
+        const iLiked = likes.includes(myId);
+        const iReposted = reposts.includes(myId);
+        const createdDate = post.createdAt && post.createdAt.toDate ? post.createdAt.toDate() : null;
+
+        const repostBanner = post.repostOf
+          ? `<div style="padding:10px 14px 0; font-size:11.5px; font-weight:700; color:var(--muted); display:flex; align-items:center; gap:5px;">
+               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+               Reposted by ${escapeHtml(post.repostedByName)}
+             </div>`
+          : '';
+
+        const commentsHtml = comments.map(c => `
+          <div style="margin-bottom:6px;"><span class="cp-username">${escapeHtml(c.name)}</span> <span style="font-size:13px;">${escapeHtml(c.text)}</span></div>
+        `).join('');
+
+        return `
+        <div class="cp-card" data-id="${post.id}">
+          ${repostBanner}
+          <div class="cp-header">
+            <div class="cp-avatar" style="display:flex;align-items:center;justify-content:center;background:var(--purple);color:#fff;font-weight:700;font-size:14px;">${escapeHtml((post.name || '?').charAt(0).toUpperCase())}</div>
+            <div class="cp-header-text">
+              <span class="cp-username">${escapeHtml(post.name)}</span>
+              <span class="cp-time">${timeAgo(createdDate)}</span>
+            </div>
+          </div>
+          <div class="cp-image"><img src="${post.image}" alt="Community post"></div>
+          <div class="cp-actions">
+            <button type="button" class="cp-like-btn cp-like-action ${iLiked ? 'liked' : ''}">
+              <svg viewBox="0 0 24 24"><path d="M20.8 4.6c-1.9-1.6-4.7-1.4-6.4.4L12 7.5l-2.4-2.5c-1.7-1.8-4.5-2-6.4-.4-2.1 1.8-2.2 5-.3 7l9 9.4 9-9.4c1.9-2 1.8-5.2-.1-7z"/></svg>
+              <span>${likes.length}</span>
+            </button>
+            <button type="button" class="cp-like-btn cp-comment-toggle">
+              <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.7 8.7 0 0 1-3.6-.8L3 21l1.9-5.5A8.4 8.4 0 0 1 3.6 11 8.5 8.5 0 0 1 12.1 3a8.4 8.4 0 0 1 8.9 8.5z"/></svg>
+              <span>${comments.length}</span>
+            </button>
+            <button type="button" class="cp-like-btn cp-repost-action ${iReposted ? 'liked' : ''}">
+              <svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              <span>${reposts.length}</span>
+            </button>
+          </div>
+          <div class="cp-caption"><span class="cp-username">${escapeHtml(post.name)}</span>${escapeHtml(post.caption)}</div>
+          <div class="cp-comments" style="display:none; padding:0 14px 14px;">
+            <div class="cp-comments-list" style="max-height:140px; overflow-y:auto; margin-bottom:10px;">${commentsHtml || '<div style="font-size:12.5px;color:var(--muted);">No comments yet.</div>'}</div>
+            <form class="cp-comment-form" style="display:flex; gap:6px;">
+              <input type="text" placeholder="Add a comment..." required style="flex:1; padding:8px 10px; border:1px solid var(--line-dark); border-radius:6px; font-size:12.5px; font-family:inherit;">
+              <button type="submit" style="background:var(--purple); color:#fff; border:none; border-radius:6px; padding:0 14px; font-size:12px; font-weight:700;">POST</button>
+            </form>
+          </div>
+        </div>
+        `;
+      }).join('');
+
+      // Like
+      communityGrid.querySelectorAll('.cp-like-action').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.closest('.cp-card').dataset.id;
+          const identity = getIdentity();
+          const post = posts.find(p => p.id === id);
+          const alreadyLiked = (post.likes || []).includes(identity.id);
+          postsCol.doc(id).update({
+            likes: alreadyLiked
+              ? firebase.firestore.FieldValue.arrayRemove(identity.id)
+              : firebase.firestore.FieldValue.arrayUnion(identity.id)
+          }).catch(err => console.error('Could not update like:', err));
+        });
+      });
+
+      // Toggle comment panel
+      communityGrid.querySelectorAll('.cp-comment-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const panel = btn.closest('.cp-card').querySelector('.cp-comments');
+          panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        });
+      });
+
+      // Add comment
+      communityGrid.querySelectorAll('.cp-comment-form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const id = form.closest('.cp-card').dataset.id;
+          const input = form.querySelector('input');
+          const text = input.value.trim();
+          if(!text) return;
+          const identity = getIdentity();
+          const commenterName = identity.name || prompt('Your name for this comment:');
+          if(!commenterName) return;
+          postsCol.doc(id).update({
+            comments: firebase.firestore.FieldValue.arrayUnion({
+              name: commenterName,
+              text: text,
+              date: new Date().toISOString()
+            })
+          }).then(() => { input.value = ''; })
+            .catch(err => alert('Could not post your comment: ' + err.message));
+        });
+      });
+
+      // Repost
+      communityGrid.querySelectorAll('.cp-repost-action').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.closest('.cp-card').dataset.id;
+          const identity = getIdentity();
+          const post = posts.find(p => p.id === id);
+          const alreadyReposted = (post.reposts || []).includes(identity.id);
+          if(alreadyReposted) return; // one repost per person, keep it simple
+
+          postsCol.doc(id).update({
+            reposts: firebase.firestore.FieldValue.arrayUnion(identity.id)
+          }).catch(err => console.error('Could not update repost count:', err));
+
+          const repostedByName = identity.name || prompt('Your name (shown as who reposted this):') || 'Someone';
+          postsCol.add({
+            name: post.name,
+            caption: post.caption,
+            image: post.image,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            likes: [],
+            comments: [],
+            reposts: [],
+            repostOf: post.repostOf ? post.repostOf : { id: post.id, name: post.name },
+            repostedByName: repostedByName
+          }).catch(err => console.error('Could not create repost:', err));
+        });
+      });
+    }
+
+    function resetForm(){
+      communityPostForm.reset();
+      communityFileLabel.textContent = 'Choose a photo';
+      communityPreviewWrap.style.display = 'none';
+      communityPreviewImg.src = '';
+      pendingImageData = null;
+    }
+
+    postMomentBtn.addEventListener('click', () => {
+      resetForm();
+      communityFormMsg.style.display = 'none';
+      const identity = getIdentity();
+      if(identity.name) communityName.value = identity.name;
+      communityModal.classList.add('show');
+    });
+    closeCommunityModal.addEventListener('click', () => communityModal.classList.remove('show'));
+    communityModal.addEventListener('click', (e) => {
+      if(e.target === communityModal) communityModal.classList.remove('show');
+    });
+
+    communityFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      if(!file.type.startsWith('image/')){
+        alert('Please choose an image file.');
+        return;
+      }
+      communityFileLabel.textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          // Downscale so it stores cheaply in Firestore
+          const maxDim = 900;
+          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          pendingImageData = canvas.toDataURL('image/jpeg', 0.82);
+          communityPreviewImg.src = pendingImageData;
+          communityPreviewWrap.style.display = 'block';
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    communityPostForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if(!pendingImageData){
+        alert('Please choose a photo to share.');
+        return;
+      }
+      postsCol.add({
+        name: communityName.value.trim() || 'Anonymous',
+        caption: communityCaption.value.trim(),
+        image: pendingImageData,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        likes: [],
+        comments: [],
+        reposts: []
+      }).then(() => {
+        communityFormMsg.style.display = 'block';
+        setTimeout(() => { communityModal.classList.remove('show'); }, 900);
+      }).catch(err => alert('Could not post your photo: ' + err.message));
+    });
+
+    // Live-updates: everyone sees new posts, likes, comments, and reposts as they happen
+    postsCol.orderBy('createdAt', 'desc').limit(60).onSnapshot(snapshot => {
+      posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderPosts();
+    }, err => console.error('Could not load community posts:', err));
+  })();
 </script>
 
 </body>
