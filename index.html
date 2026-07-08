@@ -2583,6 +2583,7 @@
       <li><a href="#collection">SHOP</a></li>
       <li><a href="#collection">COLLECTION</a></li>
       <li><a href="#lifestyle">ABOUT</a></li>
+      <li><a href="social.html">SOCIAL</a></li>
       <li><a href="#footer">CONTACT</a></li>
     </ul>
 
@@ -2741,9 +2742,15 @@
 <!-- ================= COMMUNITY WALL ================= -->
 <section class="community-wall" id="communityWall">
   <div class="community-wall-inner">
-    <h3>From The Community</h3>
+    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:28px;">
+      <h3 style="margin-bottom:0;">From The Community</h3>
+      <a href="social.html" style="font-size:12.5px; font-weight:800; letter-spacing:0.5px; color:var(--purple); white-space:nowrap;">GO TO SOCIAL FEED →</a>
+    </div>
     <div class="community-grid" id="communityGrid"></div>
     <div class="community-empty" id="communityEmpty" style="display:none;">No moments shared yet — be the first to post!</div>
+    <div id="communityViewMoreWrap" style="display:none; text-align:center; margin-top:32px;">
+      <a href="social.html" class="btn btn-outline" id="communityViewMoreBtn">VIEW ALL POSTS</a>
+    </div>
   </div>
 </section>
 
@@ -2970,18 +2977,19 @@
   <div class="campaign-modal-inner" style="max-width:420px; padding:28px 26px 26px;">
     <button class="campaign-close" id="closeCommunityModal">✕</button>
     <h3 style="font-family:'Archivo',sans-serif; font-size:22px; font-weight:800; margin-bottom:6px;">Share Your Moment</h3>
-    <p style="color:var(--muted); font-size:13.5px; line-height:1.6; margin-bottom:20px;">Post a photo of your Solus tumbler and inspire the community.</p>
+    <p style="color:var(--muted); font-size:13.5px; line-height:1.6; margin-bottom:20px;">Share a photo of your Solus tumbler, or just write something — a photo is optional.</p>
 
     <form id="communityPostForm">
-      <div id="communityPreviewWrap" style="display:none; margin-bottom:14px;">
+      <div id="communityPreviewWrap" style="display:none; margin-bottom:14px; position:relative;">
         <img id="communityPreviewImg" style="width:100%; border-radius:8px; max-height:220px; object-fit:cover; display:block;" alt="">
+        <button type="button" id="communityRemoveImageBtn" aria-label="Remove photo" style="position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; border:none; background:rgba(0,0,0,0.65); color:#fff; cursor:pointer; font-size:14px; line-height:1;">✕</button>
       </div>
-      <label for="communityFileInput" style="display:flex; align-items:center; justify-content:center; gap:8px; border:1.5px dashed var(--line-dark); border-radius:8px; padding:16px; cursor:pointer; font-size:13px; font-weight:700; color:var(--muted); margin-bottom:14px;">
+      <label for="communityFileInput" id="communityFileLabelWrap" style="display:flex; align-items:center; justify-content:center; gap:8px; border:1.5px dashed var(--line-dark); border-radius:8px; padding:16px; cursor:pointer; font-size:13px; font-weight:700; color:var(--muted); margin-bottom:14px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-        <span id="communityFileLabel">Choose a photo</span>
+        <span id="communityFileLabel">Add a photo (optional)</span>
       </label>
-      <input type="file" id="communityFileInput" accept="image/*" style="display:none;" required>
-      <textarea id="communityCaption" placeholder="Say something about your moment..." required style="width:100%; padding:11px 13px; border:1px solid var(--line-dark); border-radius:6px; font-size:13.5px; min-height:70px; resize:vertical; margin-bottom:16px; font-family:inherit;"></textarea>
+      <input type="file" id="communityFileInput" accept="image/*" style="display:none;">
+      <textarea id="communityCaption" placeholder="Say something about your moment..." style="width:100%; padding:11px 13px; border:1px solid var(--line-dark); border-radius:6px; font-size:13.5px; min-height:70px; resize:vertical; margin-bottom:16px; font-family:inherit;"></textarea>
       <button type="submit" class="btn btn-primary" style="width:100%;">POST</button>
       <div id="communityFormMsg" style="display:none; text-align:center; color:#3a8c5c; font-size:13px; font-weight:700; margin-top:12px;">Thanks for sharing! 🎉</div>
     </form>
@@ -4695,6 +4703,11 @@ searchClose.addEventListener('click', () => {
       // added as a guest on this device) so it's the same on every device.
       currentUserId = user.uid;
       loadDataForUser(user.uid);
+
+      // Arrived here to log in on the way to the Social feed — send them right back
+      if(new URLSearchParams(location.search).get('returnTo') === 'social'){
+        location.href = 'social.html';
+      }
     } else {
       authFormView.style.display = 'block';
       createAccountView.style.display = 'none';
@@ -4836,12 +4849,21 @@ searchClose.addEventListener('click', () => {
     const communityPreviewImg = document.getElementById('communityPreviewImg');
     const communityCaption = document.getElementById('communityCaption');
     const communityFormMsg = document.getElementById('communityFormMsg');
+    const communityViewMoreWrap = document.getElementById('communityViewMoreWrap');
 
     if(!communityModal || !postMomentBtn) return;
 
     const postsCol = db.collection('communityPosts');
     let posts = [];
     let pendingImageData = null;
+
+    // Homepage only ever shows a 2-row preview of the feed — the rest lives on social.html
+    function getPreviewColumnCount(){
+      const w = window.innerWidth;
+      if(w <= 560) return 1;
+      if(w <= 980) return 2;
+      return 4;
+    }
 
     // Every post/like/comment/repost is tied to the logged-in account —
     // guests are prompted to log in before any of these actions go through.
@@ -4878,13 +4900,19 @@ searchClose.addEventListener('click', () => {
       if(posts.length === 0){
         communityGrid.innerHTML = '';
         communityEmpty.style.display = 'block';
+        communityViewMoreWrap.style.display = 'none';
         return;
       }
       communityEmpty.style.display = 'none';
       const myIdentity = getIdentity();
       const myId = myIdentity ? myIdentity.id : null;
 
-      communityGrid.innerHTML = posts.map((post) => {
+      // Cap the homepage preview to exactly 2 rows; the full feed lives on social.html
+      const previewLimit = getPreviewColumnCount() * 2;
+      const visiblePosts = posts.slice(0, previewLimit);
+      communityViewMoreWrap.style.display = posts.length > previewLimit ? 'block' : 'none';
+
+      communityGrid.innerHTML = visiblePosts.map((post) => {
         const likes = post.likes || [];
         const reposts = post.reposts || [];
         const comments = post.comments || [];
@@ -4922,7 +4950,7 @@ searchClose.addEventListener('click', () => {
               </button>
             </div>` : ''}
           </div>
-          <div class="cp-image"><img src="${post.image}" alt="Community post"></div>
+          ${post.image ? `<div class="cp-image"><img src="${post.image}" alt="Community post"></div>` : ''}
           <div class="cp-actions">
             <button type="button" class="cp-like-btn cp-like-action ${iLiked ? 'liked' : ''}">
               <svg viewBox="0 0 24 24"><path d="M20.8 4.6c-1.9-1.6-4.7-1.4-6.4.4L12 7.5l-2.4-2.5c-1.7-1.8-4.5-2-6.4-.4-2.1 1.8-2.2 5-.3 7l9 9.4 9-9.4c1.9-2 1.8-5.2-.1-7z"/></svg>
@@ -5012,7 +5040,7 @@ searchClose.addEventListener('click', () => {
           postsCol.add({
             name: post.name,
             caption: post.caption,
-            image: post.image,
+            image: post.image || null,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             likes: [],
             comments: [],
@@ -5066,10 +5094,21 @@ searchClose.addEventListener('click', () => {
 
     function resetForm(){
       communityPostForm.reset();
-      communityFileLabel.textContent = 'Choose a photo';
+      communityFileLabel.textContent = 'Add a photo (optional)';
       communityPreviewWrap.style.display = 'none';
       communityPreviewImg.src = '';
       pendingImageData = null;
+    }
+
+    const communityRemoveImageBtn = document.getElementById('communityRemoveImageBtn');
+    if(communityRemoveImageBtn){
+      communityRemoveImageBtn.addEventListener('click', () => {
+        pendingImageData = null;
+        communityFileInput.value = '';
+        communityFileLabel.textContent = 'Add a photo (optional)';
+        communityPreviewWrap.style.display = 'none';
+        communityPreviewImg.src = '';
+      });
     }
 
     postMomentBtn.addEventListener('click', () => {
@@ -5116,15 +5155,16 @@ searchClose.addEventListener('click', () => {
     communityPostForm.addEventListener('submit', (e) => {
       e.preventDefault();
       if(!requireAuth('Log in to share a moment with the community.')) return;
-      if(!pendingImageData){
-        alert('Please choose a photo to share.');
+      const caption = communityCaption.value.trim();
+      if(!caption && !pendingImageData){
+        alert('Write something or add a photo before posting.');
         return;
       }
       const identity = getIdentity();
       postsCol.add({
         name: identity.name,
-        caption: communityCaption.value.trim(),
-        image: pendingImageData,
+        caption: caption,
+        image: pendingImageData || null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         likes: [],
         comments: [],
@@ -5134,7 +5174,7 @@ searchClose.addEventListener('click', () => {
       }).then(() => {
         communityFormMsg.style.display = 'block';
         setTimeout(() => { communityModal.classList.remove('show'); }, 900);
-      }).catch(err => alert('Could not post your photo: ' + err.message));
+      }).catch(err => alert('Could not post: ' + err.message));
     });
 
     // Live-updates: everyone sees new posts, likes, comments, and reposts as they happen
@@ -5142,7 +5182,22 @@ searchClose.addEventListener('click', () => {
       posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       renderPosts();
     }, err => console.error('Could not load community posts:', err));
+
+    // Re-check the 2-row cap when the viewport crosses a breakpoint (e.g. rotating a tablet)
+    let lastPreviewCols = getPreviewColumnCount();
+    window.addEventListener('resize', () => {
+      const cols = getPreviewColumnCount();
+      if(cols !== lastPreviewCols){
+        lastPreviewCols = cols;
+        renderPosts();
+      }
+    });
   })();
+
+  // If arriving from the social feed page to log in, open the account modal automatically
+  if(new URLSearchParams(location.search).get('login') === '1'){
+    requireAuth('Log in to post and interact on the Social feed.');
+  }
 </script>
 
 </body>
