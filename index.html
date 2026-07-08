@@ -2087,6 +2087,18 @@
   }
   .cp-card .cp-header{padding:12px 14px 6px;}
   .cp-card .cp-caption{padding:6px 14px 16px;}
+  .cp-composer{
+    display:flex;
+    flex-direction:column;
+    border:1.5px solid var(--purple);
+    background:#fbfaff;
+  }
+  .cp-composer > div:last-child{
+    display:flex;
+    flex-direction:column;
+    flex:1;
+  }
+  .cp-composer textarea{flex:1;}
   .cp-like-btn{
     background:none;
     border:none;
@@ -2746,7 +2758,33 @@
       <h3 style="margin-bottom:0;">From The Community</h3>
       <a href="social.html" style="font-size:12.5px; font-weight:800; letter-spacing:0.5px; color:var(--purple); white-space:nowrap;">GO TO SOCIAL FEED →</a>
     </div>
-    <div class="community-grid" id="communityGrid"></div>
+    <div class="community-grid" id="communityGrid">
+      <div class="cp-card cp-composer" id="communityComposer">
+        <div class="cp-header" style="padding:14px 14px 8px;">
+          <div class="cp-avatar" id="composerAvatar" style="display:flex;align-items:center;justify-content:center;background:var(--purple);color:#fff;font-weight:700;font-size:14px;overflow:hidden;">?</div>
+          <div class="cp-header-text">
+            <span class="cp-username" id="composerGreeting">Share a moment</span>
+            <span class="cp-time">Photo optional</span>
+          </div>
+        </div>
+        <div style="padding:0 14px 14px;">
+          <textarea id="composerCaption" placeholder="What's on your mind?" style="width:100%; padding:11px 13px; border:1px solid var(--line-dark); border-radius:6px; font-size:13.5px; min-height:64px; resize:vertical; margin-bottom:12px; font-family:inherit; background:#fafafa; color:#0c0c0e;"></textarea>
+          <div id="composerPreviewWrap" style="display:none; margin-bottom:12px; position:relative;">
+            <img id="composerPreviewImg" style="width:100%; border-radius:8px; max-height:180px; object-fit:cover; display:block;" alt="">
+            <button type="button" id="composerRemoveImageBtn" aria-label="Remove photo" style="position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; border:none; background:rgba(0,0,0,0.65); color:#fff; cursor:pointer; font-size:14px; line-height:1;">✕</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <label for="composerFileInput" title="Add a photo" style="display:flex; align-items:center; justify-content:center; width:38px; height:38px; border:1.5px dashed var(--line-dark); border-radius:8px; cursor:pointer; color:var(--muted); flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </label>
+            <input type="file" id="composerFileInput" accept="image/*" style="display:none;">
+            <button type="button" id="composerPostBtn" class="btn btn-primary" style="flex:1; padding:10px; font-size:12.5px;">POST</button>
+          </div>
+          <div id="composerFormMsg" style="display:none; text-align:center; color:#3a8c5c; font-size:12px; font-weight:700; margin-top:10px;">Thanks for sharing! 🎉</div>
+        </div>
+      </div>
+      <div id="communityPostsList" style="display:contents;"></div>
+    </div>
     <div class="community-empty" id="communityEmpty" style="display:none;">No moments shared yet — be the first to post!</div>
     <div id="communityViewMoreWrap" style="display:none; text-align:center; margin-top:32px;">
       <a href="social.html" class="btn btn-outline" id="communityViewMoreBtn">VIEW ALL POSTS</a>
@@ -4841,6 +4879,7 @@ searchClose.addEventListener('click', () => {
     const postMomentBtn = document.getElementById('postMomentBtn');
     const closeCommunityModal = document.getElementById('closeCommunityModal');
     const communityGrid = document.getElementById('communityGrid');
+    const communityPostsList = document.getElementById('communityPostsList');
     const communityEmpty = document.getElementById('communityEmpty');
     const communityPostForm = document.getElementById('communityPostForm');
     const communityFileInput = document.getElementById('communityFileInput');
@@ -4898,7 +4937,7 @@ searchClose.addEventListener('click', () => {
 
     function renderPosts(){
       if(posts.length === 0){
-        communityGrid.innerHTML = '';
+        communityPostsList.innerHTML = '';
         communityEmpty.style.display = 'block';
         communityViewMoreWrap.style.display = 'none';
         return;
@@ -4912,7 +4951,7 @@ searchClose.addEventListener('click', () => {
       const visiblePosts = posts.slice(0, previewLimit);
       communityViewMoreWrap.style.display = posts.length > previewLimit ? 'block' : 'none';
 
-      communityGrid.innerHTML = visiblePosts.map((post) => {
+      communityPostsList.innerHTML = visiblePosts.map((post) => {
         const likes = post.likes || [];
         const reposts = post.reposts || [];
         const comments = post.comments || [];
@@ -5110,6 +5149,102 @@ searchClose.addEventListener('click', () => {
         communityPreviewImg.src = '';
       });
     }
+
+    // ---- Inline composer card (always visible, first slot in the grid) ----
+    const composerAvatar = document.getElementById('composerAvatar');
+    const composerGreeting = document.getElementById('composerGreeting');
+    const composerCaption = document.getElementById('composerCaption');
+    const composerFileInput = document.getElementById('composerFileInput');
+    const composerPreviewWrap = document.getElementById('composerPreviewWrap');
+    const composerPreviewImg = document.getElementById('composerPreviewImg');
+    const composerRemoveImageBtn = document.getElementById('composerRemoveImageBtn');
+    const composerPostBtn = document.getElementById('composerPostBtn');
+    const composerFormMsg = document.getElementById('composerFormMsg');
+    let composerImageData = null;
+
+    function refreshComposerIdentity(){
+      const identity = getIdentity();
+      if(identity){
+        composerGreeting.textContent = `What's on your mind, ${identity.name}?`;
+        composerAvatar.innerHTML = identity.photo
+          ? `<img src="${identity.photo}" style="width:100%;height:100%;object-fit:cover;" alt="">`
+          : escapeHtml(identity.name.charAt(0).toUpperCase());
+      } else {
+        composerGreeting.textContent = 'Share a moment';
+        composerAvatar.textContent = '?';
+      }
+    }
+    refreshComposerIdentity();
+    auth.onAuthStateChanged(refreshComposerIdentity);
+
+    function resetComposer(){
+      composerCaption.value = '';
+      composerFileInput.value = '';
+      composerImageData = null;
+      composerPreviewWrap.style.display = 'none';
+      composerPreviewImg.src = '';
+      composerFormMsg.style.display = 'none';
+    }
+
+    composerFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      if(!file.type.startsWith('image/')){
+        alert('Please choose an image file.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 900;
+          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          composerImageData = canvas.toDataURL('image/jpeg', 0.82);
+          composerPreviewImg.src = composerImageData;
+          composerPreviewWrap.style.display = 'block';
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    composerRemoveImageBtn.addEventListener('click', () => {
+      composerImageData = null;
+      composerFileInput.value = '';
+      composerPreviewWrap.style.display = 'none';
+      composerPreviewImg.src = '';
+    });
+
+    composerPostBtn.addEventListener('click', () => {
+      if(!requireAuth('Log in to share a moment with the community.')) return;
+      const caption = composerCaption.value.trim();
+      if(!caption && !composerImageData){
+        alert('Write something or add a photo before posting.');
+        return;
+      }
+      const identity = getIdentity();
+      composerPostBtn.disabled = true;
+      postsCol.add({
+        name: identity.name,
+        caption: caption,
+        image: composerImageData || null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        likes: [],
+        comments: [],
+        reposts: [],
+        authorId: identity.id,
+        authorPhoto: identity.photo || null
+      }).then(() => {
+        composerFormMsg.style.display = 'block';
+        resetComposer();
+      }).catch(err => alert('Could not post: ' + err.message))
+        .finally(() => { composerPostBtn.disabled = false; });
+    });
 
     postMomentBtn.addEventListener('click', () => {
       if(!requireAuth('Log in to share a moment with the community.')) return;
