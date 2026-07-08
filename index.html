@@ -631,6 +631,89 @@
     --line-dark:rgba(0,0,0,0.08);
   }
   .cart-dropdown.show{display:flex;}
+  /* ---------- NAV CRYPTO WALLET CONNECT ---------- */
+  .nav-crypto-wrap{position:relative;}
+  .nav-crypto-wrap > button{position:relative;}
+  .nav-wallet-dot{
+    position:absolute;
+    top:1px;right:1px;
+    width:9px;height:9px;
+    border-radius:50%;
+    background:#3a8c5c;
+    border:2px solid var(--black);
+  }
+  .nav-wallet-dropdown{
+    position:absolute;
+    top:calc(100% + 16px);
+    right:0;
+    width:280px;
+    background:#fff;
+    color:var(--ink);
+    border-radius:14px;
+    box-shadow:0 20px 50px rgba(0,0,0,.25);
+    display:none;
+    flex-direction:column;
+    padding:18px;
+    z-index:200;
+    --ink:#0c0c0e;
+    --muted:#8a8a93;
+    --line-dark:rgba(0,0,0,0.08);
+  }
+  .nav-wallet-dropdown.show{display:flex;}
+  .nav-wallet-dropdown p{
+    font-size:12.5px;
+    line-height:1.5;
+    color:var(--muted);
+    margin-bottom:12px;
+  }
+  .nav-wallet-dropdown button{
+    width:100%;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    padding:10px;
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.4px;
+  }
+  .nav-wallet-dropdown button:hover{background:var(--purple-dark);}
+  #navDisconnectWalletBtn2{background:#e5e5ea;color:#3a3a42;}
+  #navDisconnectWalletBtn2:hover{background:#d8d8de;}
+  .nav-wallet-coins{
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+    color:var(--muted);
+    text-align:center;
+    margin-top:12px;
+  }
+  .nav-wallet-addr-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:6px;
+  }
+  .nav-wallet-addr-row code{
+    font-size:12.5px;
+    font-family:'Courier New',monospace;
+    background:#f2f2f4;
+    border-radius:5px;
+    padding:3px 7px;
+  }
+  .nav-wallet-network{
+    font-size:10.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--muted);
+    background:#f2f2f4;
+    display:inline-block;
+    padding:3px 8px;
+    border-radius:20px;
+    margin-bottom:14px;
+  }
   .cart-dropdown .cart-empty{
     padding:36px 20px;
     text-align:center;
@@ -2690,6 +2773,24 @@
       <button aria-label="My Wallet" id="walletBtn" title="My Wallet">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13a1 1 0 0 1 1 1v3z"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/><path d="M21 12a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h-4a3 3 0 0 1 0-6h4z"/></svg>
       </button>
+      <div class="nav-crypto-wrap">
+        <button aria-label="Connect Crypto Wallet" id="navWalletConnectBtn" title="Connect Wallet (MetaMask)">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+          <span class="nav-wallet-dot" id="navWalletDot" style="display:none;"></span>
+        </button>
+        <div class="nav-wallet-dropdown" id="navWalletDropdown">
+          <div id="navWalletDisconnectedView">
+            <p>Connect a MetaMask (or other EVM) wallet to pay with crypto directly at checkout.</p>
+            <button type="button" id="navConnectWalletBtn2">Connect Wallet</button>
+            <div class="nav-wallet-coins">Supports BTC · ETH · BNB</div>
+          </div>
+          <div id="navWalletConnectedView" style="display:none;">
+            <div class="nav-wallet-addr-row"><span class="co-wallet-dot"></span><code id="navWalletAddr"></code></div>
+            <div class="nav-wallet-network" id="navWalletNetworkLabel"></div>
+            <button type="button" id="navDisconnectWalletBtn2">Disconnect</button>
+          </div>
+        </div>
+      </div>
       <button aria-label="Search" id="searchBtn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
       <button aria-label="Account" id="accountBtn">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -4116,7 +4217,69 @@ document.querySelectorAll('.social-btn').forEach(btn => {
       : 'Send exact amount to';
 
     updatePayBtnLabel();
+    renderNavWalletState();
   }
+
+  // ---- Nav bar wallet indicator: mirrors connection state on every page, not just checkout ----
+  const navWalletConnectBtn = document.getElementById('navWalletConnectBtn');
+  const navWalletDropdown = document.getElementById('navWalletDropdown');
+  const navWalletDot = document.getElementById('navWalletDot');
+  const navWalletDisconnectedView = document.getElementById('navWalletDisconnectedView');
+  const navWalletConnectedView = document.getElementById('navWalletConnectedView');
+  const navConnectWalletBtn2 = document.getElementById('navConnectWalletBtn2');
+  const navDisconnectWalletBtn2 = document.getElementById('navDisconnectWalletBtn2');
+  const navWalletAddr = document.getElementById('navWalletAddr');
+  const navWalletNetworkLabel = document.getElementById('navWalletNetworkLabel');
+
+  function renderNavWalletState(){
+    if(!navWalletConnectBtn) return;
+    if(connectedWallet){
+      navWalletDot.style.display = 'block';
+      navWalletDisconnectedView.style.display = 'none';
+      navWalletConnectedView.style.display = 'block';
+      navWalletAddr.textContent = shortAddr(connectedWallet.address);
+      navWalletNetworkLabel.textContent = networkNameForChain(connectedWallet.chainIdHex);
+    } else {
+      navWalletDot.style.display = 'none';
+      navWalletDisconnectedView.style.display = 'block';
+      navWalletConnectedView.style.display = 'none';
+    }
+  }
+
+  if(navWalletConnectBtn){
+    navWalletConnectBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      navWalletDropdown.classList.toggle('show');
+    });
+    document.addEventListener('click', (e) => {
+      if(!navWalletDropdown.contains(e.target) && !navWalletConnectBtn.contains(e.target)){
+        navWalletDropdown.classList.remove('show');
+      }
+    });
+    navConnectWalletBtn2.addEventListener('click', async () => {
+      await connectWallet();
+      // Default a freshly-connected wallet to ETH in the checkout crypto tab, if that panel exists
+      if(connectedWallet && coCryptoCoin && (coCryptoCoin.value !== 'ETH' && coCryptoCoin.value !== 'BNB')){
+        coCryptoCoin.value = 'ETH';
+        refreshCrypto();
+      }
+    });
+    navDisconnectWalletBtn2.addEventListener('click', disconnectWallet);
+  }
+
+  // Silently check if a wallet is already connected (no popup) so the nav reflects it on load
+  (async function detectExistingWalletConnection(){
+    const provider = getProvider();
+    if(!provider) return;
+    try{
+      const accounts = await provider.request({ method: 'eth_accounts' });
+      if(accounts && accounts[0]){
+        const chainIdHex = await provider.request({ method: 'eth_chainId' });
+        connectedWallet = { address: accounts[0], chainIdHex };
+        renderNavWalletState();
+      }
+    }catch(err){ /* ignore — treat as not connected */ }
+  })();
 
   coConnectWalletBtn.addEventListener('click', connectWallet);
   coDisconnectWalletBtn.addEventListener('click', disconnectWallet);
