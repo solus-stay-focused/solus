@@ -2611,6 +2611,9 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
       </div>
+      <button aria-label="Refer a friend" id="referralBtn" title="Refer & Earn">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      </button>
       <button aria-label="Search" id="searchBtn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
       <button aria-label="Account" id="accountBtn">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3034,6 +3037,38 @@
   </div>
 </div>
 
+<div class="campaign-modal" id="referralModal">
+  <div class="campaign-modal-inner" style="max-width:440px; padding:30px 26px 26px;">
+    <button class="campaign-close" id="closeReferralModal">✕</button>
+    <h3 style="font-family:'Archivo',sans-serif; font-size:22px; font-weight:800; margin-bottom:6px;">Refer &amp; Earn</h3>
+    <p style="color:var(--muted); font-size:13.5px; line-height:1.6; margin-bottom:20px;">Share your link with a friend. Every time they place an order, you earn <strong>5% of their order total</strong> as credit toward your next Solus order.</p>
+
+    <div id="referralLoggedOut" style="display:none;">
+      <p style="font-size:13.5px; margin-bottom:14px;">Log in to get your personal referral link and start earning credit.</p>
+      <button type="button" class="btn btn-primary" id="referralLoginBtn" style="width:100%;">LOG IN</button>
+    </div>
+
+    <div id="referralLoggedIn" style="display:none;">
+      <label style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; display:block;">Your referral link</label>
+      <div style="display:flex; gap:8px; margin-bottom:18px;">
+        <input type="text" id="referralLinkInput" readonly style="flex:1; min-width:0; padding:11px 13px; border:1px solid var(--line-dark); border-radius:6px; font-size:12px; font-family:inherit; background:#f6f6f8; color:var(--ink);">
+        <button type="button" id="referralCopyBtn" class="btn btn-primary" style="padding:0 16px; white-space:nowrap;">COPY</button>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <div style="flex:1; text-align:center; background:#f6f6f8; border-radius:8px; padding:14px 8px;">
+          <div style="font-size:22px; font-weight:800; color:var(--purple);" id="referralFriendsCount">0</div>
+          <div style="font-size:10.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Friends Referred</div>
+        </div>
+        <div style="flex:1; text-align:center; background:#f6f6f8; border-radius:8px; padding:14px 8px;">
+          <div style="font-size:22px; font-weight:800; color:var(--purple);" id="referralCreditAmount">$0.00</div>
+          <div style="font-size:10.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Credit Available</div>
+        </div>
+      </div>
+      <p style="font-size:11.5px; color:var(--muted); margin-top:14px; line-height:1.5;">Available credit is applied automatically at checkout, up to your order total.</p>
+    </div>
+  </div>
+</div>
+
 <div class="review-modal" id="reviewModal">
   <div class="review-box">
     <button class="close-review" id="closeReview">✕</button>
@@ -3219,6 +3254,13 @@
         <div class="co-tot-row"><span>Subtotal</span><span id="coSubtotal">$0.00</span></div>
         <div class="co-tot-row"><span>Shipping</span><span id="coShipping">FREE</span></div>
         <div class="co-tot-row"><span>Tax (est.)</span><span id="coTax">$0.00</span></div>
+        <div class="co-tot-row" id="coReferralRow" style="display:none; align-items:center;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:inherit;">
+            <input type="checkbox" id="coApplyReferralCredit" style="cursor:pointer;">
+            <span>Referral credit (<span id="coReferralAvailable">$0.00</span> available)</span>
+          </label>
+          <span id="coReferralApplied">-$0.00</span>
+        </div>
         <div class="co-tot-row grand"><span>Total</span><span id="coGrandTotal">$0.00</span></div>
       </div>
     </div>
@@ -3627,6 +3669,9 @@ document.querySelectorAll('.social-btn').forEach(btn => {
 
   // ---- Order history ----
   let userOrders = [];
+  let myReferralCredit = 0;
+  let myReferredBy = null;
+  let myReferredCount = 0;
 
   // ---- Wishlist / Watch Later ----
   let wishlistItems = [];
@@ -3790,6 +3835,7 @@ document.querySelectorAll('.social-btn').forEach(btn => {
   const payBtnLabelEl = document.getElementById('payBtnLabel');
   const coOrderNum = document.getElementById('coOrderNum');
   const TAX_RATE = 0.08;
+  const REFERRAL_REWARD_RATE = 0.05; // referrer earns 5% of a referred friend's order as credit
   let currentMethod = 'card';
 
   // ---- payment method tabs ----
@@ -3873,9 +3919,18 @@ document.querySelectorAll('.social-btn').forEach(btn => {
     setTimeout(()=> coCopyAddress.textContent = original, 1400);
   });
 
+  function getAppliedReferralCredit(){
+    const checkbox = document.getElementById('coApplyReferralCredit');
+    if(!checkbox || !checkbox.checked) return 0;
+    const subtotal = cartSubtotal();
+    const preCreditTotal = subtotal + subtotal * TAX_RATE;
+    return Math.min(myReferralCredit, preCreditTotal);
+  }
+
   function getTotal(){
     const subtotal = cartSubtotal();
-    return subtotal + subtotal * TAX_RATE;
+    const preCreditTotal = subtotal + subtotal * TAX_RATE;
+    return Math.max(0, preCreditTotal - getAppliedReferralCredit());
   }
 
   function openCheckout(){
@@ -3904,10 +3959,26 @@ document.querySelectorAll('.social-btn').forEach(btn => {
 
     const subtotal = cartSubtotal();
     const tax = subtotal * TAX_RATE;
-    const total = subtotal + tax;
+    const preCreditTotal = subtotal + tax;
 
     coSubtotalEl.textContent = `$${subtotal.toFixed(2)}`;
     coTaxEl.textContent = `$${tax.toFixed(2)}`;
+
+    const coReferralRow = document.getElementById('coReferralRow');
+    const coReferralAvailable = document.getElementById('coReferralAvailable');
+    const coReferralApplied = document.getElementById('coReferralApplied');
+    const coApplyReferralCredit = document.getElementById('coApplyReferralCredit');
+    if(myReferralCredit > 0){
+      coReferralRow.style.display = 'flex';
+      const cappedAvailable = Math.min(myReferralCredit, preCreditTotal);
+      coReferralAvailable.textContent = `$${myReferralCredit.toFixed(2)}`;
+      coReferralApplied.textContent = coApplyReferralCredit.checked ? `-$${cappedAvailable.toFixed(2)}` : '-$0.00';
+    } else {
+      coReferralRow.style.display = 'none';
+      coApplyReferralCredit.checked = false;
+    }
+
+    const total = getTotal();
     coGrandTotalEl.textContent = `$${total.toFixed(2)}`;
     updatePayBtnLabel();
   }
@@ -3915,6 +3986,7 @@ document.querySelectorAll('.social-btn').forEach(btn => {
   function closeCheckoutModal(){
     checkoutModal.classList.remove('show');
   }
+  document.getElementById('coApplyReferralCredit').addEventListener('change', renderCheckoutSummary);
   closeCheckoutBtn.addEventListener('click', closeCheckoutModal);
   checkoutModal.addEventListener('click', (e)=>{
     if(e.target === checkoutModal) closeCheckoutModal();
@@ -4001,13 +4073,34 @@ document.querySelectorAll('.social-btn').forEach(btn => {
       // Save a record of this order so it shows up under "My Orders"
       const subtotal = cartSubtotal();
       const tax = subtotal * TAX_RATE;
+      const preCreditTotal = subtotal + tax;
+      const creditApplied = getAppliedReferralCredit();
+      const finalTotal = Math.max(0, preCreditTotal - creditApplied);
       userOrders.unshift({
         id: orderNum,
         date: new Date().toISOString(),
         items: cartItems.map(i => ({ name: i.name, image: i.image, price: i.price, qty: i.qty })),
-        total: subtotal + tax
+        total: finalTotal
       });
       persistUserData();
+
+      // Deduct any referral credit the shopper applied to this order
+      if(creditApplied > 0 && currentUserId){
+        myReferralCredit = Math.max(0, myReferralCredit - creditApplied);
+        db.collection('users').doc(currentUserId).set({
+          referralCredit: firebase.firestore.FieldValue.increment(-creditApplied)
+        }, { merge: true }).catch(err => console.error('Could not update referral credit:', err));
+      }
+
+      // If this shopper was referred by someone, credit that person 5% of this order
+      if(myReferredBy && currentUserId){
+        const reward = preCreditTotal * REFERRAL_REWARD_RATE;
+        db.collection('users').doc(myReferredBy).set({
+          referralCredit: firebase.firestore.FieldValue.increment(reward)
+        }, { merge: true }).catch(err => console.error('Could not credit referrer:', err));
+      }
+
+      document.getElementById('coApplyReferralCredit').checked = false;
 
       coFormCol.style.display = 'none';
       coSummaryCol.style.display = 'none';
@@ -4366,6 +4459,31 @@ searchClose.addEventListener('click', () => {
   const auth = firebase.auth();
   const db = firebase.firestore();
 
+  // ---- Referral capture: a visitor arriving via ?ref=<uid> credits that uid when they later place an order ----
+  (function(){
+    const ref = new URLSearchParams(location.search).get('ref');
+    if(ref) localStorage.setItem('solus-pending-ref', ref);
+  })();
+
+  function registerReferralIfPending(uid){
+    const pendingRef = localStorage.getItem('solus-pending-ref');
+    if(!pendingRef || pendingRef === uid){ localStorage.removeItem('solus-pending-ref'); return; }
+    const myDocRef = db.collection('users').doc(uid);
+    myDocRef.get().then(doc => {
+      const data = doc.exists ? doc.data() : {};
+      if(data.referredBy){ localStorage.removeItem('solus-pending-ref'); return; } // already attributed once, don't overwrite
+      db.collection('users').doc(pendingRef).get().then(refDoc => {
+        if(!refDoc.exists){ localStorage.removeItem('solus-pending-ref'); return; }
+        myReferredBy = pendingRef;
+        myDocRef.set({ referredBy: pendingRef }, { merge: true }).catch(()=>{});
+        db.collection('users').doc(pendingRef).set({
+          referredCount: firebase.firestore.FieldValue.increment(1)
+        }, { merge: true }).catch(()=>{});
+        localStorage.removeItem('solus-pending-ref');
+      }).catch(()=>{});
+    }).catch(()=>{});
+  }
+
   // ---------- PER-ACCOUNT CART / WISHLIST PERSISTENCE ----------
   // Logged-in users: cart + wishlist are stored in Firestore under users/{uid}
   // Guests (not logged in): cart + wishlist are stored in localStorage on this device only
@@ -4442,6 +4560,12 @@ searchClose.addEventListener('click', () => {
       const mergedOrders = [...(cloudData.orders || []), ...(guestData.orders || [])]
         .sort((a,b) => new Date(b.date) - new Date(a.date));
       applyLoadedData({ cart: mergedCart, wishlist: mergedWishlist, orders: mergedOrders });
+
+      // Referral program state for this account
+      myReferralCredit = typeof cloudData.referralCredit === 'number' ? cloudData.referralCredit : 0;
+      myReferredBy = cloudData.referredBy || null;
+      myReferredCount = typeof cloudData.referredCount === 'number' ? cloudData.referredCount : 0;
+      if(typeof renderCheckoutSummary === 'function' && checkoutModal.classList.contains('show')) renderCheckoutSummary();
 
       // Apply a custom profile picture saved on this account, if any
       if(cloudData.photoBase64){
@@ -4741,6 +4865,7 @@ searchClose.addEventListener('click', () => {
       // added as a guest on this device) so it's the same on every device.
       currentUserId = user.uid;
       loadDataForUser(user.uid);
+      registerReferralIfPending(user.uid);
 
       // Arrived here to log in on the way to the Social feed — send them right back
       if(new URLSearchParams(location.search).get('returnTo') === 'social'){
@@ -4753,6 +4878,9 @@ searchClose.addEventListener('click', () => {
 
       // Signed out: fall back to this device's local (guest) cart/wishlist.
       currentUserId = null;
+      myReferralCredit = 0;
+      myReferredBy = null;
+      myReferredCount = 0;
       loadDataForGuest();
     }
   });
@@ -5326,6 +5454,63 @@ searchClose.addEventListener('click', () => {
         lastPreviewCols = cols;
         renderPosts();
       }
+    });
+  })();
+
+  // ---- Refer & Earn modal ----
+  (function(){
+    const referralBtn = document.getElementById('referralBtn');
+    const referralModal = document.getElementById('referralModal');
+    const closeReferralModal = document.getElementById('closeReferralModal');
+    const referralLoggedOut = document.getElementById('referralLoggedOut');
+    const referralLoggedIn = document.getElementById('referralLoggedIn');
+    const referralLoginBtn = document.getElementById('referralLoginBtn');
+    const referralLinkInput = document.getElementById('referralLinkInput');
+    const referralCopyBtn = document.getElementById('referralCopyBtn');
+    const referralFriendsCount = document.getElementById('referralFriendsCount');
+    const referralCreditAmount = document.getElementById('referralCreditAmount');
+
+    if(!referralBtn || !referralModal) return;
+
+    function openReferralModal(){
+      const user = auth.currentUser;
+      if(user){
+        referralLoggedOut.style.display = 'none';
+        referralLoggedIn.style.display = 'block';
+        referralLinkInput.value = `${location.origin}${location.pathname}?ref=${user.uid}`;
+        // Pull the freshest numbers in case a friend's order credited this account while the modal was closed
+        db.collection('users').doc(user.uid).get().then(doc => {
+          const data = doc.exists ? doc.data() : {};
+          myReferralCredit = typeof data.referralCredit === 'number' ? data.referralCredit : 0;
+          myReferredCount = typeof data.referredCount === 'number' ? data.referredCount : 0;
+          referralFriendsCount.textContent = myReferredCount;
+          referralCreditAmount.textContent = `$${myReferralCredit.toFixed(2)}`;
+        }).catch(() => {
+          referralFriendsCount.textContent = myReferredCount;
+          referralCreditAmount.textContent = `$${myReferralCredit.toFixed(2)}`;
+        });
+      } else {
+        referralLoggedOut.style.display = 'block';
+        referralLoggedIn.style.display = 'none';
+      }
+      referralModal.classList.add('show');
+    }
+
+    referralBtn.addEventListener('click', openReferralModal);
+    closeReferralModal.addEventListener('click', () => referralModal.classList.remove('show'));
+    referralModal.addEventListener('click', (e) => {
+      if(e.target === referralModal) referralModal.classList.remove('show');
+    });
+    referralLoginBtn.addEventListener('click', () => {
+      referralModal.classList.remove('show');
+      requireAuth('Log in to get your referral link and start earning.');
+    });
+    referralCopyBtn.addEventListener('click', () => {
+      referralLinkInput.select();
+      if(navigator.clipboard){ navigator.clipboard.writeText(referralLinkInput.value).catch(()=>{}); }
+      const original = referralCopyBtn.textContent;
+      referralCopyBtn.textContent = 'COPIED!';
+      setTimeout(() => referralCopyBtn.textContent = original, 1400);
     });
   })();
 
