@@ -2173,6 +2173,27 @@
     margin-bottom:32px;
   }
 
+  /* ---------- VIDEO BANNER ---------- */
+  .video-banner{
+    position:relative;
+    width:100%;
+    aspect-ratio:2/1;
+    background-color:var(--black);
+    overflow:hidden;
+  }
+  .video-banner video{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    transform:translate(-50%,-50%);
+  }
+  @media(max-width:640px){
+    .video-banner{ aspect-ratio:9/16; }
+  }
+
   /* ---------- LIFESTYLE ---------- */
   .lifestyle{
     background:var(--black);
@@ -2293,109 +2314,208 @@
 
   /* ---------- FOOTER ---------- */
   footer{
-    background:var(--black);
+    position:relative;
+    background:#05070d url('bg1.png') center/cover no-repeat;
     color:#fff;
-    padding:64px 48px 28px;
+    padding:72px 48px 40px;
+    overflow:hidden;
   }
+  footer::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(4,8,16,0.35) 0%, rgba(4,8,16,0.75) 70%, rgba(4,8,16,0.92) 100%);
+    pointer-events:none;
+  }
+  footer > *{position:relative; z-index:1;}
   .footer-grid{
     max-width:1280px;
     margin:0 auto;
     display:grid;
-    grid-template-columns:1.4fr 1fr 1fr 1.3fr;
+    grid-template-columns:1.5fr 1fr 1fr 1.3fr;
     gap:40px;
-    padding-bottom:48px;
-    border-bottom:1px solid var(--line);
+    padding-bottom:52px;
   }
-  .footer-brand .logo{margin-bottom:14px;}
+  .footer-brand .logo{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  .footer-brand .logo .crown{width:34px;height:34px;filter:brightness(0) invert(1) drop-shadow(0 0 8px rgba(139,133,232,0.5));}
+  .footer-brand .logo .logo-text{display:flex;flex-direction:column;line-height:1.15;}
+  .footer-brand .logo .wordmark{font-family:'Archivo',sans-serif;font-weight:900;font-size:22px;letter-spacing:1px;color:#fff;}
+  .footer-brand .logo .tagline{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--purple-light);}
   .footer-brand p{
-    color:var(--muted);
-    font-size:13px;
+    color:#c7c9d6;
+    font-size:14px;
     line-height:1.7;
+    margin-bottom:18px;
+  }
+  .footer-brand .accent-line{
+    width:44px;height:2px;
+    background:var(--purple);
+    border-radius:2px;
     margin-bottom:20px;
   }
-  .socials{display:flex;gap:14px;}
+  .socials{display:flex;gap:12px;}
   .socials a{
-    width:34px;height:34px;
-    border:1px solid var(--line);
+    width:38px;height:38px;
+    border:1px solid rgba(139,133,232,0.4);
+    background:rgba(139,133,232,0.06);
     border-radius:50%;
     display:flex;
     align-items:center;
     justify-content:center;
-    transition:background .18s ease, border-color .18s ease;
+    transition:background .18s ease, border-color .18s ease, transform .18s ease;
   }
-  .socials a:hover{background:var(--purple); border-color:var(--purple);}
+  .socials a:hover{background:var(--purple); border-color:var(--purple); transform:translateY(-2px);}
   .socials svg{width:15px;height:15px;}
   .footer-col h4{
     font-size:12px;
-    font-weight:700;
+    font-weight:800;
     letter-spacing:1.5px;
-    margin-bottom:20px;
+    margin-bottom:10px;
     color:#fff;
   }
-  .footer-col li{margin-bottom:12px;}
-  .footer-col a{
-    color:var(--muted);
-    font-size:13px;
-    transition:color .18s ease;
+  .footer-col .accent-line{
+    width:34px;height:2px;
+    background:var(--purple);
+    border-radius:2px;
+    margin-bottom:22px;
   }
-  .footer-col a:hover{color:#fff;}
+  .footer-col li{margin-bottom:16px;}
+  .footer-col a{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#d5d6e2;
+    font-size:13.5px;
+    transition:color .18s ease, transform .18s ease;
+  }
+  .footer-col a:hover{color:#fff; transform:translateX(2px);}
+  .footer-col a svg{
+    width:16px;height:16px;
+    flex-shrink:0;
+    color:var(--purple-light);
+  }
   .newsletter p{
-    color:var(--muted);
-    font-size:13px;
+    color:#c7c9d6;
+    font-size:13.5px;
     margin-bottom:18px;
     line-height:1.6;
   }
   .newsletter-form{
     display:flex;
-    gap:0;
+    align-items:center;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:8px;
+    padding:4px 4px 4px 14px;
+    gap:8px;
+    margin-bottom:26px;
   }
+  .newsletter-form svg{width:16px;height:16px;color:#9a9aa8;flex-shrink:0;}
   .newsletter-form input{
     flex:1;
-    background:#fff;
+    background:transparent;
     border:none;
-    padding:13px 16px;
+    padding:11px 4px;
     font-size:13px;
-    border-radius:3px 0 0 3px;
+    color:#fff;
     font-family:inherit;
   }
-  .newsletter-form input:focus{outline:2px solid var(--purple); outline-offset:-2px;}
+  .newsletter-form input::placeholder{color:#8b8b98;}
+  .newsletter-form input:focus{outline:none;}
   .newsletter-form button{
-    background:var(--purple);
+    background:linear-gradient(90deg, var(--purple-dark), var(--purple-light));
     color:#0c0c0e;
-    padding:0 22px;
+    padding:11px 20px;
     font-size:11px;
-    font-weight:700;
-    letter-spacing:1px;
-    border-radius:0 3px 3px 0;
-    transition:background .18s ease;
+    font-weight:800;
+    letter-spacing:0.5px;
+    border-radius:6px;
+    white-space:nowrap;
+    transition:opacity .18s ease;
   }
-  .newsletter-form button:hover{background:var(--purple-light);}
+  .newsletter-form button:hover{opacity:0.88;}
+  .footer-badges{
+    display:flex;
+    gap:22px;
+  }
+  .footer-badges .badge{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:8px;
+    flex:1;
+  }
+  .footer-badges .badge .badge-icon{
+    width:44px;height:44px;
+    border:1px solid rgba(139,133,232,0.4);
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--purple-light);
+  }
+  .footer-badges .badge .badge-icon svg{width:19px;height:19px;}
+  .footer-badges .badge span{
+    font-size:12px;
+    color:#d5d6e2;
+    line-height:1.35;
+  }
   .footer-bottom{
     max-width:1280px;
     margin:0 auto;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    padding-top:24px;
+    padding:20px 28px;
     flex-wrap:wrap;
     gap:16px;
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:14px;
   }
+  .footer-bottom-left{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .footer-bottom-left .shield-icon{
+    width:34px;height:34px;
+    border:1px solid rgba(139,133,232,0.4);
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--purple-light);
+    flex-shrink:0;
+  }
+  .footer-bottom-left .shield-icon svg{width:16px;height:16px;}
   .footer-bottom p{
-    color:var(--muted);
-    font-size:12px;
+    color:#c7c9d6;
+    font-size:13px;
+    line-height:1.5;
   }
   .payment-icons{
     display:flex;
     gap:10px;
   }
-  .payment-icons span{
+  .payment-icons .pay-badge{
     background:#fff;
-    color:#222;
-    font-size:10px;
-    font-weight:800;
-    padding:6px 10px;
-    border-radius:3px;
-    letter-spacing:0.5px;
+    padding:7px 14px;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:0;
+  }
+  .payment-icons .pay-badge svg{
+    height:18px;
+    width:auto;
+    display:block;
   }
 
   /* ---------- RESPONSIVE ---------- */
@@ -2953,6 +3073,11 @@
   </div>
 </section>
 
+<!-- ================= VIDEO BANNER ================= -->
+<section class="video-banner" id="videoBanner">
+  <video id="bannerVideo" src="video3.mp4" autoplay muted loop playsinline></video>
+</section>
+
 <!-- ================= LIFESTYLE / COMMUNITY ================= -->
 <section class="lifestyle" id="lifestyle">
   <div class="lifestyle-img">
@@ -3015,10 +3140,14 @@
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="#" class="logo">
-        <svg class="crown" viewBox="0 0 24 24" fill="currentColor"><path d="M2 18h20l-1.5-9-4.5 5-4-7-4 7-4.5-5L2 18z"/><rect x="2" y="19.5" width="20" height="2" rx="0.5"/></svg>
-        <span class="wordmark">SOLUS</span>
+        <img src="solus.png" alt="SOLUS" class="crown">
+        <span class="logo-text">
+          <span class="wordmark">SOLUS</span>
+          <span class="tagline">STAY FOCUSED</span>
+        </span>
       </a>
       <p>Built for focus.<br>Made for everyday champions.</p>
+      <div class="accent-line"></div>
       <div class="socials">
 
   <a href="https://www.instagram.com/md.siamalgalib/" target="_blank" aria-label="Instagram">
@@ -3053,40 +3182,90 @@
 
     <div class="footer-col">
       <h4>QUICK LINKS</h4>
+      <div class="accent-line"></div>
       <ul>
-        <li><a href="#">Home</a></li>
-        <li><a href="#collection">Shop</a></li>
-        <li><a href="#collection">Collection</a></li>
-        <li><a href="#lifestyle">About Us</a></li>
-        <li><a href="#footer">Contact</a></li>
+        <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>Home</a></li>
+        <li><a href="#collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>Shop</a></li>
+        <li><a href="#collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Collection</a></li>
+        <li><a href="#lifestyle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8.5" cy="8" r="3"/><path d="M2.5 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.6"/><path d="M14.5 20a5 5 0 0 1 8 0"/></svg>About Us</a></li>
+        <li><a href="#footer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Contact</a></li>
       </ul>
     </div>
 
     <div class="footer-col">
       <h4>CUSTOMER CARE</h4>
+      <div class="accent-line"></div>
       <ul>
-        <li><a href="#">Shipping &amp; Returns</a></li>
-        <li><a href="#">FAQs</a></li>
-        <li><a href="#">Track Order</a></li>
-        <li><a href="#">Warranty</a></li>
-        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="7" width="14" height="10" rx="1"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg>Shipping &amp; Returns</a></li>
+        <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1.5 1-1.5 2.2"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg>FAQs</a></li>
+        <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg>Track Order</a></li>
+        <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 5-3.5 8.5-7 9.5-3.5-1-7-4.5-7-9.5V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>Warranty</a></li>
+        <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Privacy Policy</a></li>
       </ul>
     </div>
 
     <div class="footer-col newsletter">
       <h4>JOIN THE SOLUS COMMUNITY</h4>
+      <div class="accent-line"></div>
       <p>Get exclusive offers, new drops &amp; more.</p>
       <form class="newsletter-form" id="subForm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
         <input type="email" placeholder="Enter your email" required>
         <button type="submit">SUBSCRIBE</button>
       </form>
+      <div class="footer-badges">
+        <div class="badge">
+          <div class="badge-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="5.5"/><path d="M9 13.5L7 21l5-2.5L17 21l-2-7.5"/><path d="M9.5 9l1.8 1.8L14.5 7.3"/></svg></div>
+          <span>Premium<br>Quality</span>
+        </div>
+        <div class="badge">
+          <div class="badge-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 0 1 13.7-5.7L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.7 5.7L4 16"/><path d="M4 20v-4h4"/></svg></div>
+          <span>Easy<br>Returns</span>
+        </div>
+        <div class="badge">
+          <div class="badge-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="2.5" y="14" width="4" height="6" rx="1.5"/><rect x="17.5" y="14" width="4" height="6" rx="1.5"/><path d="M20 20a4 4 0 0 1-4 3h-2"/></svg></div>
+          <span>24/7<br>Support</span>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="footer-bottom">
-    <p>© 2026 SOLUS. All rights reserved.</p>
+    <div class="footer-bottom-left">
+      <div class="shield-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 5-3.5 8.5-7 9.5-3.5-1-7-4.5-7-9.5V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <p>© 2026 SOLUS. All rights reserved.<br>Designed for performance. Built to last.</p>
+    </div>
     <div class="payment-icons">
-      <span>VISA</span><span>MC</span><span>PayPal</span><span>Pay</span>
+      <span class="pay-badge" aria-label="Visa">
+        <svg viewBox="0 0 50 16" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="13" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="900" font-style="italic" fill="#1434CB">VISA</text>
+        </svg>
+      </span>
+      <span class="pay-badge" aria-label="Mastercard">
+        <svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="12" r="10" fill="#EB001B"/>
+          <circle cx="26" cy="12" r="10" fill="#F79E1B"/>
+          <path d="M21 4.5a10 10 0 0 1 0 15 10 10 0 0 1 0-15z" fill="#FF5F00"/>
+        </svg>
+      </span>
+      <span class="pay-badge" aria-label="PayPal">
+        <svg viewBox="0 0 76 24" xmlns="http://www.w3.org/2000/svg">
+          <text x="18" y="19" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="800" font-style="italic" fill="#003087">P</text>
+          <text x="12" y="19" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="800" font-style="italic" fill="#009cde">P</text>
+          <text x="30" y="19" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="800" font-style="italic" fill="#003087">ayPal</text>
+        </svg>
+      </span>
+      <span class="pay-badge" aria-label="Google Pay">
+        <svg viewBox="0 0 68 20" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(0,2) scale(0.68)">
+            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z"/>
+            <path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.1-4 1.1-3.1 0-5.7-2.1-6.6-4.9H1.4v3.1C3.4 21.4 7.4 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.4 14.3c-.2-.7-.4-1.5-.4-2.3s.1-1.6.4-2.3V6.6H1.4C.5 8.3 0 10.1 0 12s.5 3.7 1.4 5.4l4-3.1z"/>
+            <path fill="#EA4335" d="M12 4.8c1.7 0 3.3.6 4.5 1.8l3.4-3.4C17.9 1.2 15.2 0 12 0 7.4 0 3.4 2.6 1.4 6.6l4 3.1c.9-2.8 3.5-4.9 6.6-4.9z"/>
+          </g>
+          <text x="20" y="15" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="500" fill="#5f6368">Pay</text>
+        </svg>
+      </span>
     </div>
   </div>
 </footer>
@@ -6129,5 +6308,24 @@ document.addEventListener('click', (e) => {
   }
 </script>
 
+<script>
+  // ---- Video banner: unmute on scroll-into-view, mute on scroll-away ----
+  (function(){
+    const vid = document.getElementById('bannerVideo');
+    if(!vid) return;
+    const observer = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting && entry.intersectionRatio >= 0.6){
+          vid.muted = false;
+          vid.volume = 1;
+          vid.play().catch(()=>{ vid.muted = true; });
+        } else {
+          vid.muted = true;
+        }
+      });
+    }, { threshold: [0, 0.6, 1] });
+    observer.observe(vid);
+  })();
+</script>
 </body>
 </html>
